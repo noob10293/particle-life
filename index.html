@@ -10,12 +10,19 @@
 
 <body>
   <p class ="bg-text">press space to pause
-  <br>click when paused to aim
+  <br>click and drag to add dots
   <br>press r to reset simulation
-  <br>press s to show settings</p>
-  <div id="settings"></div>
+  <br>press s to show settings
+  <br>press g to show graph (kinda buggy)
+  <br>press e,o,y,n,b,p to select color
+  <br>press a for random colors</p>
+  <div id="settings" style="display:none;"></div>
+  <canvas id="graph"style="display:none;"></canvas>
   <canvas id="canvas"></canvas>
-  <script id = "script" src="script.js"></script>
+  <script src="settings.js"></script>
+  <script src="matrix.js"></script>
+  <script src="script.js"></script>
+  <script src="graph.js"></script>
 </body>
 
 </html>
