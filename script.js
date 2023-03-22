@@ -1,3 +1,11 @@
+function randomNumber(a,b,index=false){
+  //random number from a to b
+  if (index){
+    return Math.floor(Math.random() * (b - a) + a)
+  }else {
+    return (Math.random() * (b - a) + a)-(0.5*(b-a))
+  }
+}
 function getDistance(dot1, dot2) {//is positive
   let dx=Math.abs(dot1.x-dot2.x)
   let dy=Math.abs(dot1.y-dot2.y)
@@ -39,8 +47,8 @@ class Dot {
 
   moveFrom(dot, distance, force) {
     if (distance === 0) {
-      this.y += Math.random()
-      this.x += Math.random()
+      this.y += Math.random()-0.5
+      this.x += Math.random()-0.5
       return;
     }
     let dx=(dot.x - this.x)
@@ -61,6 +69,9 @@ class Dot {
     let sin = dy / distance
     this.vx += cos * force
     this.vy += sin * force
+    if (this.vx>50){
+      
+    }
   }
 
   wrap() {
@@ -79,18 +90,14 @@ class Dot {
     
   }
 
-  block() {
-    if (this.x > canvas.width) {
-      this.x=canvas.width
+  bounce() {
+    if (this.x > canvas.width||this.x < 0) {
+      this.x-=this.vx
+      this.vx*=-1
     }
-    if (this.x < 0) {
-      this.x=0
-    }
-    if (this.y > canvas.height) {
-      this.y=canvas.height
-    }
-    if (this.y < 0) {
-      this.y=0
+    if (this.y > canvas.height||this.y < 0) {
+      this.y-=this.vy
+      this.vy*=-1
     }
   }
 
@@ -112,7 +119,7 @@ class Dot {
     if (settings.wrap){
       this.wrap()
     } else{
-      this.block()
+      this.bounce()
     }
     this.draw()
   }
@@ -124,17 +131,17 @@ class Simulation {
     this.dots = []
     for (let i = 0; i < dots; i++) {
       if (color=="random"){
-        let tcolor = colors[Math.floor((Math.random()*6))]
-        this.addDot(100+Math.random()*100, 100+Math.random()*100,tcolor)
+        let tcolor = colors[randomNumber(0,6,true)]
+        this.addDot(100+randomNumber(0,dots), 100+randomNumber(0,dots),tcolor)
       }else {
-        this.addDot(100+Math.random()*100, 100+Math.random()*100,color)
+        this.addDot(100+randomNumber(0,dots), 100+randomNumber(0,dots),color)
       }
     }
   }
   addDot(x, y, color) {
     this.dots.push(new Dot(x, y, color, this.ctx))
   }
-  update() {
+  update(steps) {
     for (let dot1 of this.dots) {
       for (let dot2 of this.dots) {
         if (dot1 == dot2) {
@@ -154,6 +161,7 @@ class Simulation {
 }
 
 
+const bgText= document.getElementById("bg-text")
 const canvas = document.getElementById("canvas")
 const ctx = canvas.getContext("2d")
 const observer = new ResizeObserver(() => {
@@ -181,12 +189,21 @@ function render() {
 }
 requestAnimationFrame(render);
 
+
+function addDot(x,y){
+  for (let i=0;i<settings.brushSize;i++){
+    let color = (dcolor=="random")?colors[randomNumber(0,6,true)]:dcolor
+    simulation.addDot(x+randomNumber(0,settings.brushSize*2), y+randomNumber(0,settings.brushSize*2),color)
+  }
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.key == ' ') {
     if (event.repeat) return;
     play = !play
   }
   if (event.key == 'r') {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     simulation = new Simulation(100, "random", ctx)
   }
   if (event.key == 'e') {
@@ -198,7 +215,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key == 'y') {
     dcolor="yellow"
   }
-  if (event.key == 'g') {
+  if (event.key == 'n') {
     dcolor="green"
   }
   if (event.key == 'b') {
@@ -220,19 +237,21 @@ document.addEventListener("mouseup",function() {
 })
 
 document.addEventListener('mousedown', function(e) {
-  const rect = canvas.getBoundingClientRect()
-  const x = e.clientX - rect.left //maybe use offsetX,Y
-  const y = e.clientY - rect.top
-  let color = (dcolor=="random") ? colors[Math.floor((Math.random()*6))]:dcolor 
-  simulation.addDot(x, y,color)
+  if(e.target==canvas||e.target==bgText){
+    const rect = canvas.getBoundingClientRect()
+    const x = e.clientX - rect.left //maybe use offsetX,Y
+    const y = e.clientY - rect.top
+    addDot(x,y)
+  }
 })
 
 document.addEventListener('mousemove', function(e) {
   if (mouseDown) {
-  const rect = canvas.getBoundingClientRect()
-  const x = e.clientX - rect.left //maybe use offsetX,Y
-  const y = e.clientY - rect.top
-  let color = (dcolor=="random") ? colors[Math.floor((Math.random()*6))]:dcolor
-  simulation.addDot(x, y,color)
+    if(e.target==canvas||e.target==bgText){
+      const rect = canvas.getBoundingClientRect()
+      const x = e.clientX - rect.left //maybe use offsetX,Y
+      const y = e.clientY - rect.top
+      addDot(x,y)
+    }
   }
 })

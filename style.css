@@ -3,7 +3,7 @@ html, body {
   margin: 0;
 }
 
-.bg-text{
+#bg-text{
   position:absolute;
   margin: 20px;
   opacity: 0.3;
