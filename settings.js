@@ -1,10 +1,11 @@
 const settings = {
   radius: 1
+  , timeSteps:2
   , brushSize:1
   , friction: 0.6
   , repel: 1
-  , maxDistance: 50
-  , minDistance: 25
+  , maxDistance: 40
+  , minDistance: 20
   , slowdown: false
   , wrap: true
 }
@@ -39,7 +40,7 @@ class SettingsInput {
 }
 const settingsDiv = document.getElementById("settings")
 
-const numInputs = ["repel", "friction", "radius", "maxDistance", "minDistance", "brushSize"]
+const numInputs = ["repel", "friction", "radius", "maxDistance", "minDistance", "brushSize","timeSteps"]
 numInputs.forEach((value, index, array) => { array[index] = new SettingsInput(value, true, settingsDiv) })
 const checkInputs = ["slowdown", "wrap"]
 checkInputs.forEach((value, index, array) => { array[index] = new SettingsInput(value, false, settingsDiv) })

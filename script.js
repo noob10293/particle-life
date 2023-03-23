@@ -45,10 +45,10 @@ class Dot {
     this.draw()
   }
 
-  moveFrom(dot, distance, force) {
+  moveFrom(dot, distance, force,step) {
     if (distance === 0) {
-      this.y += Math.random()-0.5
-      this.x += Math.random()-0.5
+      this.y += (Math.random()-0.5)*(1/step)
+      this.x += (Math.random()-0.5)*(1/step)
       return;
     }
     let dx=(dot.x - this.x)
@@ -67,11 +67,8 @@ class Dot {
     }
     let cos = dx / distance
     let sin = dy / distance
-    this.vx += cos * force
-    this.vy += sin * force
-    if (this.vx>50){
-      
-    }
+    this.vx += cos * force*(1/step)
+    this.vy += sin * force*(1/step)
   }
 
   wrap() {
@@ -121,7 +118,6 @@ class Dot {
     } else{
       this.bounce()
     }
-    this.draw()
   }
 }
 
@@ -142,20 +138,25 @@ class Simulation {
     this.dots.push(new Dot(x, y, color, this.ctx))
   }
   update(steps) {
-    for (let dot1 of this.dots) {
-      for (let dot2 of this.dots) {
-        if (dot1 == dot2) {
-          continue
+    for(let i=0;i<steps;i++){
+      for (let dot1 of this.dots) {
+        for (let dot2 of this.dots) {
+          if (dot1 == dot2) {
+            continue
+          }
+          let distance = getDistance(dot1, dot2)
+          if (distance < settings.maxDistance) {
+            let force = accelerator(matrix[dot1.color][dot2.color], distance)
+            dot1.moveFrom(dot2, distance, force,steps)
+          }
         }
-        let distance = getDistance(dot1, dot2)
-        if (distance < settings.maxDistance) {
-          let force = accelerator(matrix[dot1.color][dot2.color], distance)
-          dot1.moveFrom(dot2, distance, force)
-        }
+      }
+      for (let dot of this.dots) {
+        dot.update()
       }
     }
     for (let dot of this.dots) {
-      dot.update()
+      dot.draw()
     }
   }
 }
@@ -177,7 +178,7 @@ var simulation = new Simulation(100, "random", ctx)
 function render() {
   if (play) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    simulation.update();
+    simulation.update(settings.timeSteps);
   }
   if (settings.slowdown) {
     setTimeout(() => {
@@ -230,10 +231,10 @@ document.addEventListener("keydown", (event) => {
 })
 var mouseDown = 0;
 document.body.addEventListener("mousedown",function() { 
-  ++mouseDown;
+  mouseDown=1;
 })
 document.addEventListener("mouseup",function() {
-  --mouseDown;
+  mouseDown=0;
 })
 
 document.addEventListener('mousedown', function(e) {
