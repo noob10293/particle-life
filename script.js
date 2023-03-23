@@ -172,6 +172,8 @@ const observer = new ResizeObserver(() => {
 observer.observe(canvas)
 var play = true
 var dcolor="random"
+var fps;
+const times = [];
 
 var simulation = new Simulation(100, "random", ctx)
 
@@ -179,6 +181,15 @@ function render() {
   if (play) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     simulation.update(settings.timeSteps);
+    ctx.fillStyle = "black";
+    ctx.font = "10px Arial";
+    times.push(1000/(performance.now()-lastTime))
+    if (times.length>60){
+      times.shift()
+    }
+    fps=times.reduce((a, b) => a + b, 0) / times.length
+    ctx.fillText("dots: "+simulation.dots.length+"fps: "+fps.toFixed(2), canvas.width-95, canvas.height-10);
+    lastTime=performance.now()
   }
   if (settings.slowdown) {
     setTimeout(() => {
@@ -188,6 +199,7 @@ function render() {
     requestAnimationFrame(render)
   }
 }
+var lastTime=performance.now();  
 requestAnimationFrame(render);
 
 
