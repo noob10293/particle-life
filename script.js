@@ -1,167 +1,3 @@
-function randomNumber(a,b,index=false){
-  //random number from a to b
-  if (index){
-    return Math.floor(Math.random() * (b - a) + a)
-  }else {
-    return (Math.random() * (b - a) + a)-(0.5*(b-a))
-  }
-}
-function getDistance(dot1, dot2) {//is positive
-  let dx=Math.abs(dot1.x-dot2.x)
-  let dy=Math.abs(dot1.y-dot2.y)
-  if (settings.wrap){
-    if (dx>(canvas.width*0.5)){
-      dx=canvas.width-dx
-    }
-    if (dy>(canvas.height*0.5)){
-      dy=canvas.height-dy
-    }
-  }
-  return Math.sqrt(dx*dx + dy*dy)
-}
-
-function accelerator(factor, distance) {
-  let force;
-  if (distance < settings.minDistance) {
-    force = (settings.repel / settings.minDistance) * distance - settings.repel
-  } else if (distance > settings.maxDistance) {
-    force = 0
-  } else {
-    let mid = (settings.minDistance + settings.maxDistance) / 2
-    let slope = factor / (mid - settings.minDistance)
-    force = -(slope * Math.abs(distance - mid)) + factor
-  }
-  return force
-}
-
-class Dot {
-  constructor(x, y, color, ctx) {
-    this.ctx = ctx
-    this.x = x
-    this.y = y
-    this.vx = 0;
-    this.vy = 0
-    this.color = color
-    this.draw()
-  }
-
-  moveFrom(dot, distance, force,step) {
-    if (distance === 0) {
-      this.y += (Math.random()-0.5)*(1/step)
-      this.x += (Math.random()-0.5)*(1/step)
-      return;
-    }
-    let dx=(dot.x - this.x)
-    let dy= (dot.y - this.y)
-    if (settings.wrap){
-      if (Math.abs(dx)>(canvas.width*0.5)){
-        let neg = dx/Math.abs(dx)
-        dx=canvas.width-Math.abs(dx)
-        dx*=-1*neg
-      }
-      if (Math.abs(dy)>(canvas.height*0.5)){
-        let neg = dy/Math.abs(dy)
-        dy=canvas.height-Math.abs(dy)
-        dy*=-1*neg
-      }
-    }
-    let cos = dx / distance
-    let sin = dy / distance
-    this.vx += cos * force*(1/step)
-    this.vy += sin * force*(1/step)
-  }
-
-  wrap() {
-    if (this.x > canvas.width) {
-      this.x=this.x-canvas.width
-    }
-    if (this.x < 0) {
-      this.x=canvas.width-this.x
-    }
-    if (this.y > canvas.height) {
-      this.y=this.y-canvas.height
-    }
-    if (this.y < 0) {
-      this.y=canvas.height-this.y
-    }
-    
-  }
-
-  bounce() {
-    if (this.x > canvas.width||this.x < 0) {
-      this.x-=this.vx
-      this.vx*=-1
-    }
-    if (this.y > canvas.height||this.y < 0) {
-      this.y-=this.vy
-      this.vy*=-1
-    }
-  }
-
-  move(){
-    this.x+=this.vx
-    this.y+=this.vy
-  }
-  draw() {
-    this.ctx.fillStyle = this.color;
-    this.ctx.beginPath();
-    this.ctx.arc(this.x, this.y, settings.radius, 0, 2 * Math.PI);
-    this.ctx.fill();
-  }
-
-  update() {
-    this.vx*=settings.friction
-    this.vy*=settings.friction
-    this.move()
-    if (settings.wrap){
-      this.wrap()
-    } else{
-      this.bounce()
-    }
-  }
-}
-
-class Simulation {
-  constructor(dots, color, ctx) {
-    this.ctx = ctx
-    this.dots = []
-    for (let i = 0; i < dots; i++) {
-      if (color=="random"){
-        let tcolor = colors[randomNumber(0,6,true)]
-        this.addDot(100+randomNumber(0,dots), 100+randomNumber(0,dots),tcolor)
-      }else {
-        this.addDot(100+randomNumber(0,dots), 100+randomNumber(0,dots),color)
-      }
-    }
-  }
-  addDot(x, y, color) {
-    this.dots.push(new Dot(x, y, color, this.ctx))
-  }
-  update(steps) {
-    for(let i=0;i<steps;i++){
-      for (let dot1 of this.dots) {
-        for (let dot2 of this.dots) {
-          if (dot1 == dot2) {
-            continue
-          }
-          let distance = getDistance(dot1, dot2)
-          if (distance < settings.maxDistance) {
-            let force = accelerator(matrix[dot1.color][dot2.color], distance)
-            dot1.moveFrom(dot2, distance, force,steps)
-          }
-        }
-      }
-      for (let dot of this.dots) {
-        dot.update()
-      }
-    }
-    for (let dot of this.dots) {
-      dot.draw()
-    }
-  }
-}
-
-
 const bgText= document.getElementById("bg-text")
 const canvas = document.getElementById("canvas")
 const ctx = canvas.getContext("2d")
@@ -181,15 +17,7 @@ function render() {
   if (play) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     simulation.update(settings.timeSteps);
-    ctx.fillStyle = "black";
-    ctx.font = "10px Arial";
-    times.push(1000/(performance.now()-lastTime))
-    if (times.length>60){
-      times.shift()
-    }
-    fps=times.reduce((a, b) => a + b, 0) / times.length
-    ctx.fillText("dots: "+simulation.dots.length+"fps: "+fps.toFixed(2), canvas.width-95, canvas.height-10);
-    lastTime=performance.now()
+    displayInfo()
   }
   if (settings.slowdown) {
     setTimeout(() => {
@@ -202,6 +30,18 @@ function render() {
 var lastTime=performance.now();  
 requestAnimationFrame(render);
 
+
+function displayInfo() {
+    ctx.fillStyle = "black"
+    ctx.font = "10px Arial"
+    times.push(1000 / (performance.now() - lastTime))
+    if (times.length > 20) {
+        times.shift()
+    }
+    fps = times.reduce((a, b) => a + b, 0) / times.length
+    ctx.fillText("dots: " + simulation.dots.length + " fps: " + fps.toFixed(2), canvas.width - 95, canvas.height - 10)
+    lastTime = performance.now()
+}
 
 function addDot(x,y){
   for (let i=0;i<settings.brushSize;i++){
